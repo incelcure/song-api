@@ -6,3 +6,18 @@ lazy val root = (project in file("."))
   .settings(
     name := "songTest2"
   )
+
+lazy val `song-api` = (project in file("song-api"))
+  .settings(
+    name := "song-api"
+  )
+
+lazy val `file-api` = (project in file("file-api"))
+  .settings(
+    name := "file-api"
+  )
+
+lazy val `enricher-api` = (project in file("enricher-api"))
+  .settings(
+    name := "enricher-api"
+  )
