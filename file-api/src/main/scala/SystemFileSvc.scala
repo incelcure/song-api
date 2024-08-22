@@ -15,5 +15,8 @@ class SystemFileSvc extends FileSvc {
     Using.resource(new FileInputStream(filename)) { stream =>
       stream.readAllBytes()
     }
-  }
+}
+
+//  override def getMeta(file: Array[Byte], filename: String): Try[String] = Try {
+//  }
 }
