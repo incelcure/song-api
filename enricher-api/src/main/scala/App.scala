@@ -26,6 +26,18 @@ object Main {
 
     println(accessToken)
 
+    val songId = "64xpre2xJX11xbKq4wWdNH" // Avenade - Just smile and wave boys
+
+    val metaSongRequest = basicRequest
+      .get(uri"https://api.spotify.com/v1/tracks/64xpre2xJX11xbKq4wWdNH")
+      .auth
+      .bearer(accessToken)
+      .response(asStringAlways)
+      .send(back)
+      .body
+
+    val songMeta = parse(metaSongRequest).getOrElse(Json.Null)
+    println(songMeta)
 
   }
 }
