@@ -29,7 +29,7 @@ object Main {
     val songId = "64xpre2xJX11xbKq4wWdNH" // Avenade - Just smile and wave boys
 
     val metaSongRequest = basicRequest
-      .get(uri"https://api.spotify.com/v1/tracks/64xpre2xJX11xbKq4wWdNH")
+      .get(uri"https://api.spotify.com/v1/tracks/$songId")
       .auth
       .bearer(accessToken)
       .response(asStringAlways)

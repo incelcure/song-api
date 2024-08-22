@@ -6,6 +6,5 @@ import sttp.client4._
 
 class Enricher {
 
-
 }
 
