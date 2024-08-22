@@ -7,3 +7,5 @@ lazy val `file-api` = (project in file("."))
 lazy val scalaTest = Seq{
   "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 }
+
+libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.765"
