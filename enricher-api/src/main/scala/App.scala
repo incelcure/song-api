@@ -1,7 +1,9 @@
 import sttp.client4.basicRequest
 import sttp.client4.httpclient.HttpClientSyncBackend
 import sttp.client4._
-
+import io.circe._
+import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
+import io.circe.parser._
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -17,8 +19,13 @@ object Main {
       .basic(clientId, clientSecret)
       .body(Map("grant_type" -> "client_credentials"))
 
-    val tokenResponse = tokenRequest.response(asStringAlways).send(back)
-    val access_token = tokenResponse.body
-    println(access_token)
+
+    val clientCredentials = tokenRequest.response(asStringAlways).send(back).body
+    val json = parse(clientCredentials).getOrElse(Json.Null)
+    val accessToken = json.hcursor.downField("access_token").as[String].getOrElse("")
+
+    println(accessToken)
+
+
   }
 }
