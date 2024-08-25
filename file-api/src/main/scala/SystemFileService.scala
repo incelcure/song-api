@@ -15,8 +15,5 @@ class SystemFileService extends FileService {
     Using.resource(new FileInputStream(filename)) { stream =>
       stream.readAllBytes()
     }
-}
-
-//  override def getMeta(file: Array[Byte], filename: String): Try[String] = Try {
-//  }
+  }
 }
