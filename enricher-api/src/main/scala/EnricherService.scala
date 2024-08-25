@@ -1,6 +1,9 @@
+import EnricherService.ClientCredentials
 import io.circe._
 import io.circe.parser._
 import io.circe.generic.auto._
+import io.circe.generic.semiauto.deriveDecoder
+
 import scala.util.Try
 import scala.Predef
 import sttp.client4.httpclient.HttpClientSyncBackend
@@ -18,15 +21,16 @@ class EnricherService {
     .body(Map("grant_type" -> "client_credentials"))
 
 
-  private val clientCredentials = tokenRequest.response(asStringAlways).send(back).body
-  private val json = parse(clientCredentials).getOrElse(Json.Null)
-  private val accessToken = json.hcursor.downField("access_token").as[String].getOrElse("")
+  private val clientCredentialsJson = tokenRequest.response(asStringAlways).send(back).body
+  private val clientCredentials = decode[ClientCredentials](clientCredentialsJson)
+    .getOrElse(throw new RuntimeException("Cant parse creds skibidi"))
+
 
   def getMeta(songId: String): Json = {
     val metaSongRequest = basicRequest
       .get(uri"https://api.spotify.com/v1/tracks/$songId")
       .auth
-      .bearer(accessToken)
+      .bearer(clientCredentials.access_token)
       .response(asStringAlways)
       .send(back)
       .body
@@ -35,3 +39,9 @@ class EnricherService {
   }
 }
 
+object EnricherService {
+  private case class ClientCredentials(access_token: String)
+
+  private implicit val clientCredentialsDecoder: Decoder[ClientCredentials] = deriveDecoder
+
+}
