@@ -1,13 +1,13 @@
-import io.circe.Json
-import io.circe.parser.parse
-
+import io.circe._
+import io.circe.parser._
+import io.circe.generic.auto._
 import scala.util.Try
 import scala.Predef
 import sttp.client4.httpclient.HttpClientSyncBackend
 import sttp.client4._
 
 
-class Enricher {
+class EnricherService {
   private val back: WebSocketSyncBackend = HttpClientSyncBackend()
   private val clientId = System.getenv("CLIENT_ID")
   private val clientSecret = System.getenv("CLIENT_SECRET")
