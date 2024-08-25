@@ -8,8 +8,6 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import scala.util.{Try, Using}
 
 class S3FileService extends FileService {
-  println(System.getenv("S3_ACCESS_KEY"))
-
   private val awsAccessKey = System.getenv("S3_ACCESS_KEY")
   private val awsSecretKey = System.getenv("S3_SECRET_KEY")
   private val s3Host = System.getenv("S3_HOST")
