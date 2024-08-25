@@ -1,6 +1,7 @@
 import com.amazonaws.{ClientConfiguration, Protocol}
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.services.s3.{AmazonS3Client, S3ClientOptions}
+import com.amazonaws.auth.{AWSCredentialsProvider, AWSStaticCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.services.s3.{AmazonS3Client, AmazonS3ClientBuilder, S3ClientOptions}
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.util.IOUtils
 
@@ -17,11 +18,15 @@ class S3FileService extends FileService {
   config.setProtocol(Protocol.HTTP)
 
   private val awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey)
+  private val awsEndpoint = new EndpointConfiguration(s3Host, System.getenv("S3_REGION"))
 
-  private val amazonS3Client = new AmazonS3Client(awsCredentials, config)
-
-  amazonS3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true))
-  amazonS3Client.setEndpoint(s3Host)
+  private val amazonS3Client = AmazonS3ClientBuilder
+    .standard()
+    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+    .withClientConfiguration(config)
+    .withPathStyleAccessEnabled(true)
+    .withEndpointConfiguration(awsEndpoint)
+    .build()
 
   override def upload(file: Array[Byte], filename: String): Try[String] = Try {
     if (!amazonS3Client.doesBucketExistV2(bucketName)) {
