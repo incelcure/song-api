@@ -33,15 +33,11 @@ class S3FileService extends FileService {
       amazonS3Client.createBucket(bucketName)
     }
     val tempFile = File.createTempFile("upload-", filename)
-    try {
-      val fos = new FileOutputStream(tempFile)
-      fos.write(file)
-      fos.close()
-
+    Using.resource(new FileOutputStream(tempFile)) { stream =>
+      stream.write(file)
+      stream.close()
       amazonS3Client.putObject(new PutObjectRequest(bucketName, filename, tempFile))
       filename
-    } finally {
-      tempFile.delete()
     }
   }
 
