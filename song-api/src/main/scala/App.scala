@@ -1,9 +1,10 @@
 import doobie._
 import doobie.implicits._
-import cats._
 import cats.effect._
 import cats.effect.unsafe.implicits.global
-import cats.implicits._
+import doobie.postgres.circe.jsonb.implicits._
+import io.circe.Json
+import io.circe.parser._
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -25,7 +26,21 @@ object Main {
       .to[List]
 
     val ioMetaRequest = metaRequest.transact(xa)
-    println(ioMetaRequest.unsafeRunSync())
 
+    def insertMeta(songId: String, songMeta: String): Update0 = {
+      val json_meta = parse(songMeta).getOrElse(Json.Null)
+      sql"""INSERT INTO song_meta(song_id, meta_data)
+            VALUES($songId, $json_meta)
+         """.update
+    }
+
+    insertMeta("songIdInsertTest2", "{\"album\":\"testAlbum\", \"artist\":\"testArtist2\"}")
+      .run
+      .transact(xa)
+      .unsafeRunSync()
+
+
+
+    println(ioMetaRequest.unsafeRunSync())
   }
 }
