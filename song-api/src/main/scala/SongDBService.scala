@@ -21,7 +21,7 @@ class SongDBService {
     logHandler = None
   )
 
-  def getSongMetaById(songId: String): Try[String] = Try{
+  def getSongMetaById(songId: String): Try[String] = Try {
     sql"SELECT meta_data FROM song_meta WHERE song_id=$songId"
       .query[String]
       .unique
@@ -39,4 +39,6 @@ class SongDBService {
         .transact(pgConfig)
         .unsafeRunSync()
   }
+
+
 }
