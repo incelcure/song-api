@@ -17,8 +17,10 @@ import akka.util.ByteString
 import akka.stream.scaladsl.Sink
 import sttp.model.Part
 import sttp.tapir.json.circe.jsonBody
+import sttp.tapir.generic.auto._
 
 import java.io.File
+import java.nio.file.Files
 import scala.io.StdIn
 import scala.util.Random
 
@@ -29,6 +31,8 @@ object Main {
     implicit val actorSystem: ActorSystem = ActorSystem()
     implicit val materializer: Materializer = Materializer(actorSystem)
     implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+    val s3Client = new S3FileService
+
 
     def countCharacters(s: String): Future[Either[Unit, Int]] =
       Future.successful(Right[Unit, Int](s.length))
@@ -49,11 +53,24 @@ object Main {
 
     val testRoute2 = AkkaHttpServerInterpreter().toRoute(testEndpoint2.serverLogic(countCharacters))
 
+    val uploadEndpoint = endpoint
+      .summary("upload file to S3")
+      .in("upload")
+      .in(multipartBody[MultipartFileData])
+      .post
+      .out(jsonBody[String])
 
 
-    val routes = testRoute1 ~ testRoute2
+    val uploadRoute = AkkaHttpServerInterpreter().toRoute(uploadEndpoint.serverLogicPure[Future] { r =>
+      println(r)
+      val f = Files.readAllBytes(r.file.body.toPath)
+      s3Client.upload(f,r.filename)
+      Right("")
+    })
 
-//    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
+    val routes = testRoute1 ~ testRoute2 ~ uploadRoute
+
+    //    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
     val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
     StdIn.readLine()
 
