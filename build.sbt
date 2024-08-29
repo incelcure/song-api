@@ -23,3 +23,6 @@ lazy val root = (project in file("."))
   .settings(name := "songTest2")
   .aggregate(`song-api`, `file-api`, `enricher-api`)
   .dependsOn(`song-api`, `file-api`, `enricher-api`)
+
+libraryDependencies += "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "1.11.1"
+
