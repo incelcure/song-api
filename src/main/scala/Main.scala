@@ -16,15 +16,19 @@ import akka.stream.scaladsl._
 import akka.util.ByteString
 import akka.stream.scaladsl.Sink
 import sttp.model.Part
+//import sttp.tapir.CodecFormat.Json
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.generic.auto._
-
+import io.circe.Json
 import java.io.File
 import java.nio.file.Files
 import scala.io.StdIn
 import scala.util.Random
+import io.circe.syntax._
+import sttp.tapir.json.circe._
 
 case class MultipartFileData(filename: String, file: Part[File])
+case class MultipartFileWithMeta(meta: Json, file: Array[Byte])
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -32,26 +36,8 @@ object Main {
     implicit val materializer: Materializer = Materializer(actorSystem)
     implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
     val s3Client = new S3FileService
-
-
-    def countCharacters(s: String): Future[Either[Unit, Int]] =
-      Future.successful(Right[Unit, Int](s.length))
-
-    val testEndpoint1 = endpoint
-      .summary("testEndpoint1")
-      .in("test-endpoint-1" / query[String]("test-text"))
-      .get
-      .out(jsonBody[Int])
-
-    val testRoute1 = AkkaHttpServerInterpreter().toRoute(testEndpoint1.serverLogic(countCharacters))
-
-    val testEndpoint2 = endpoint
-      .summary("testEndpoint2")
-      .in("test-endpoint-2" / query[String]("test-text2"))
-      .get
-      .out(jsonBody[Int])
-
-    val testRoute2 = AkkaHttpServerInterpreter().toRoute(testEndpoint2.serverLogic(countCharacters))
+    val enricher = new EnricherService
+    val dbService = new SongDBService
 
     val uploadEndpoint = endpoint
       .summary("upload file to S3")
@@ -77,7 +63,21 @@ object Main {
       Right(s3Client.download(filename).get)
     })
 
-    val routes = testRoute1 ~ testRoute2 ~ uploadRoute ~ downloadRoute
+
+    val downloadWithMetaEndpoint = endpoint
+      .summary("download file from s3 with meta info")
+      .in("download-with-meta" / query[String]("file-id"))
+      .get
+      .out(multipartBody[MultipartFileWithMeta])
+
+    val downloadWithMetaRoute = AkkaHttpServerInterpreter()
+      .toRoute(downloadWithMetaEndpoint.serverLogicPure[Future] { fileId =>
+        val file = s3Client.download(fileId)
+        val meta = enricher.getMeta(fileId)
+        Right(MultipartFileWithMeta(meta, file.get))
+      })
+
+    val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
 
     //    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
     val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
