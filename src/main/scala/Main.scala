@@ -60,7 +60,6 @@ object Main {
       .post
       .out(jsonBody[String])
 
-
     val uploadRoute = AkkaHttpServerInterpreter().toRoute(uploadEndpoint.serverLogicPure[Future] { r =>
       println(r)
       val f = Files.readAllBytes(r.file.body.toPath)
@@ -68,7 +67,17 @@ object Main {
       Right("")
     })
 
-    val routes = testRoute1 ~ testRoute2 ~ uploadRoute
+    val downloadEndpoint = endpoint
+      .summary("download file from s3")
+      .in("download" / query[String]("filename"))
+      .get
+      .out(jsonBody[Array[Byte]])
+
+    val downloadRoute = AkkaHttpServerInterpreter().toRoute(downloadEndpoint.serverLogicPure[Future] { filename =>
+      Right(s3Client.download(filename).get)
+    })
+
+    val routes = testRoute1 ~ testRoute2 ~ uploadRoute ~ downloadRoute
 
     //    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
     val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
