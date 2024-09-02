@@ -19,6 +19,12 @@ lazy val `enricher-api` = (project in file("enricher-api"))
     name := "enricher-api"
   )
 
+lazy val `auth` = (project in file("auth"))
+  .settings(
+    name := "auth"
+  )
+
+
 lazy val root = (project in file("."))
   .settings(name := "songTest2")
   .aggregate(`song-api`, `file-api`, `enricher-api`)

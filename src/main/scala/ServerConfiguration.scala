@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-import sttp.model.Part
+import sttp.model.{Part, StatusCode}
 import sttp.tapir._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.generic.auto._
@@ -10,15 +10,18 @@ import sttp.tapir.json.circe.jsonBody
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import io.circe.Json
+import sttp.capabilities.WebSockets
+import sttp.capabilities.akka.AkkaStreams
 
 import java.io.File
 import java.nio.file.Files
 import scala.io.StdIn
-
-import sttp.tapir.json.circe._ //implicits for decode json
+import sttp.tapir.json.circe._
+import sttp.tapir.server.ServerEndpoint //implicits for decode json
 
 
 case class MultipartFileData(filename: String, file: Part[File])
+
 case class MultipartFileWithMeta(meta: Json, file: Array[Byte])
 
 class ServerConfiguration {
@@ -29,19 +32,22 @@ class ServerConfiguration {
   val enricher = new EnricherService
   val dbService = new SongDBService
 
-  val uploadEndpoint = endpoint
+  val uploadEndpoint : ServerEndpoint[WebSockets with AkkaStreams, Future] = endpoint
     .summary("upload file to S3")
     .in("upload")
     .in(multipartBody[MultipartFileData])
     .post
     .out(jsonBody[String])
+    .serverLogicSuccess { r =>
+      Future.fromTry {
+        println(r)
+        val f = Files.readAllBytes(r.file.body.toPath)
+        s3Client.upload(f, r.filename)
+      }
+    }
 
-  val uploadRoute = AkkaHttpServerInterpreter().toRoute(uploadEndpoint.serverLogicPure[Future] { r =>
-    println(r)
-    val f = Files.readAllBytes(r.file.body.toPath)
-    s3Client.upload(f, r.filename)
-    Right("")
-  })
+
+  val uploadRoute = AkkaHttpServerInterpreter().toRoute(uploadEndpoint)
 
   val downloadEndpoint = endpoint
     .summary("download file from s3")
