@@ -11,7 +11,7 @@ import scala.util.Try
 class SongDBService {
   private val pgUrl = System.getenv("POSTGRES_DB_URL")
   private val pgUser = System.getenv("POSTGRES_USER")
-  private val pgPassword = System.getenv("POSGRES_PASSWORD")
+  private val pgPassword = System.getenv("POSTGRES_PASSWORD")
 
   private val pgConfig = Transactor.fromDriverManager[IO](
     driver = "org.postgresql.Driver",
