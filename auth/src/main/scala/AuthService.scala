@@ -29,4 +29,14 @@ class AuthService {
       .transact(pgConfig)
       .unsafeRunSync()
   }
+
+  def login(name: String, password: String): Try[Boolean] = Try {
+    sql"""SELECT password FROM user_table
+          WHERE name=$name
+       """
+      .query[String]
+      .unique
+      .transact(pgConfig)
+      .unsafeRunSync() == password
+  }
 }
