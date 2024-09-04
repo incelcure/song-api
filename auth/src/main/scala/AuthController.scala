@@ -2,6 +2,7 @@ import AuthController.User
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives.post
+import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 import sttp.tapir._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
@@ -40,8 +41,21 @@ class AuthController {
 
   val regRoute = AkkaHttpServerInterpreter().toRoute(registerEndoint)
 
-  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8081).bind(regRoute)
+  val loginEndpoint = endpoint
+    .summary("login user")
+    .in("login")
+    .in(multipartBody[User])
+    .get
+    .out(jsonBody[Boolean])
+    .serverLogicSuccess{ user =>
+      Future.fromTry{
+        authService.login(user.name, user.password)
+      }
+    }
+  val logRoute = AkkaHttpServerInterpreter().toRoute(loginEndpoint)
 
+  val routes = regRoute ~ logRoute
+  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8081).bind(routes)
   def run(): Unit = {
     StdIn.readLine()
     bindFuture
