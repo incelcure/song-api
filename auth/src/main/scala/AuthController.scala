@@ -1,8 +1,8 @@
+import AuthController.User
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives.post
 import akka.stream.Materializer
-
 import sttp.tapir._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.generic.auto._
@@ -13,30 +13,45 @@ import sttp.model.{Part, StatusCode}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.io.StdIn
+import io.circe._
+import io.circe.parser._
+import io.circe.generic.auto._
+import io.circe.generic.semiauto.deriveDecoder
 
-case class User(name: String, password: String)
 
 class AuthController {
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(actorSystem)
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+  private val authService = new AuthService
 
 
+  val registerEndoint = endpoint
+    .summary("register user")
+    .in("register")
+    .in(multipartBody[User])
+    .post
+    .out(jsonBody[String])
+    .serverLogicSuccess { user =>
+      Future.fromTry {
+        authService.register(user.name, user.password)
+      }
+    }
 
-//  val registerEndoint = endpoint
-//    .summary("register user")
-//    .in("register")
-//    .in(jsonBody[String])
-//    .post
-//    .out(jsonBody[String])
-//    .serverLogicSuccess {}
+  val regRoute = AkkaHttpServerInterpreter().toRoute(registerEndoint)
 
-//  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8081).bind(routes)
-//
-//  def start(): Unit = {
-//    StdIn.readLine()
-//    bindFuture
-//      .flatMap(_.unbind)
-//      .onComplete(_ => actorSystem.terminate())
-//  }
+  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8081).bind(regRoute)
+
+  def run(): Unit = {
+    StdIn.readLine()
+    bindFuture
+      .flatMap(_.unbind)
+      .onComplete(_ => actorSystem.terminate())
+  }
+}
+
+object AuthController{
+  case class User(name: String, password: String)
+
+  implicit val userDecoder: Decoder[User] = deriveDecoder
 }

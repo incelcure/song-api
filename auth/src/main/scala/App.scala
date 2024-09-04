@@ -12,19 +12,8 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 object Main {
   def main(args: Array[String]): Unit = {
     println("Hey, auth!")
-    implicit val actorSystem: ActorSystem = ActorSystem()
-    implicit val materializer: Materializer = Materializer(actorSystem)
-    implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+    val authController = new AuthController
 
-//    val uploadEndpoint : ServerEndpoint[WebSockets with AkkaStreams, Future] = endpoint
-//      .summary("upload file to S3")
-//      .in("upload")
-//      .in(multipartBody[MultipartFileData])
-//      .post
-//      .out(jsonBody[String])
-//      .serverLogicSuccess { r =>
-//
-//        }
-//      }
+    authController.run()
   }
 }

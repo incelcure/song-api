@@ -20,14 +20,14 @@ class AuthService {
     logHandler = None
   )
 
-  def register(name: String, password: String): Try[Unit] = Try {
-    sql"""INSERT INTO user_table (id, name, password)
-         VALUES (DEFAULT, $name, $password)
+  def register(name: String, password: String): Try[String] = Try {
+    sql"""INSERT INTO user_table (name, password)
+         VALUES ($name, $password)
        """
       .update
       .run
       .transact(pgConfig)
-      .unsafeRunSync()
+      .unsafeRunSync().toString //"Query response idk"
   }
 
   def login(name: String, password: String): Try[Boolean] = Try {
