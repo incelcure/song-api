@@ -57,19 +57,6 @@ class ServerConfiguration extends AuthCheck{
 
   val uploadRoute = AkkaHttpServerInterpreter().toRoute(uploadEndpoint)
 
-  //  val downloadEndpoint = endpoint
-  //    .summary("download file from s3")
-  //    .in("download" / query[String]("filename"))
-  //    .in(header[String]("Authorization"))
-  //    .get
-  //    .out(jsonBody[Array[Byte]])
-  //    .serverLogicSuccess {
-  //      filename =>
-  //        println(filename._1)
-  //        println(filename._2)
-  //      //        Right(s3Client.download(filename).get)
-  //    }
-
   val downloadEndpoint = endpoint
     .summary("download file from s3")
     .in("download" / query[String]("filename"))
@@ -98,21 +85,21 @@ class ServerConfiguration extends AuthCheck{
   val downloadRoute = AkkaHttpServerInterpreter().toRoute(downloadEndpoint)
 
 
-    val downloadWithMetaEndpoint = endpoint
-      .summary("download file from s3 with meta info")
-      .in("download-with-meta" / query[String]("file-id"))
-      .get
-      .out(multipartBody[MultipartFileWithMeta])
+  val downloadWithMetaEndpoint = endpoint
+    .summary("download file from s3 with meta info")
+    .in("download-with-meta" / query[String]("file-id"))
+    .get
+    .out(multipartBody[MultipartFileWithMeta])
 
-    val downloadWithMetaRoute = AkkaHttpServerInterpreter()
-      .toRoute(downloadWithMetaEndpoint.serverLogicPure[Future] { fileId =>
-        val file = s3Client.download(fileId)
-        val meta = enricher.getMeta(fileId)
-        Right(MultipartFileWithMeta(meta, file.get))
-      })
+  val downloadWithMetaRoute = AkkaHttpServerInterpreter()
+    .toRoute(downloadWithMetaEndpoint.serverLogicPure[Future] { fileId =>
+      val file = s3Client.download(fileId)
+      val meta = enricher.getMeta(fileId)
+      Right(MultipartFileWithMeta(meta, file.get))
+    })
 
-    val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
-//  val routes = uploadRoute ~ downloadRoute
+  val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
+  //  val routes = uploadRoute ~ downloadRoute
 
   //    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
   val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
