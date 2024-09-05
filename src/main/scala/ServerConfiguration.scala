@@ -32,9 +32,10 @@ class ServerConfiguration extends AuthCheck{
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(actorSystem)
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+  val dbService = new SongDBService
+
   val s3Client = new S3FileService
   val enricher = new EnricherService
-  val dbService = new SongDBService
 
   val uploadEndpoint: ServerEndpoint[WebSockets with AkkaStreams, Future] = endpoint
     .summary("upload file to S3")
