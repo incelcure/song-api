@@ -2,7 +2,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-
 import sttp.model.{Part, StatusCode}
 import sttp.tapir._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
@@ -22,11 +21,15 @@ import java.nio.file.Files
 import java.util.Base64
 import scala.io.StdIn
 import sttp.tapir.json.circe._
-import sttp.tapir.server.ServerEndpoint //implicits for decode json
+import sttp.tapir.server.ServerEndpoint
+
+import scala.util.{Failure, Success} //implicits for decode json
 
 case class MultipartFileData(filename: String, file: Part[File])
 
 case class MultipartFileWithMeta(meta: Json, file: Array[Byte])
+
+case class AuthError(message: String)
 
 class ServerConfiguration extends AuthCheck{
   implicit val actorSystem: ActorSystem = ActorSystem()
@@ -73,17 +76,24 @@ class ServerConfiguration extends AuthCheck{
     .in(header[String]("Authorization"))
     .get
     .out(jsonBody[Array[Byte]])
-    .serverLogicSuccess[Future] {
+    .errorOut(statusCode)
+    .serverLogic[Future] {
       request_data =>
+        val (filename, authBase) = request_data
         Future {
-          val filename = request_data._1
-          val authBase = request_data._2
-          checkCreds(authBase) match {
-            case true => s3Client.download(filename).get
-            case false => throw new RuntimeException("Username or password is incorrect")
+          if(!checkCreds(authBase)){
+            Left(StatusCode.Unauthorized)
+          }
+          else {
+            println(checkCreds(authBase)) // возвращает true если креды подходят, false иначе
+            s3Client.download(filename) match {
+              case Success(filedata) => Right(filedata)
+              case Failure(_) => Left(StatusCode.NotFound)
+            }
           }
         }
     }
+
 
   val downloadRoute = AkkaHttpServerInterpreter().toRoute(downloadEndpoint)
 

@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.util.IOUtils
 
 import java.io.{File, FileInputStream, FileOutputStream}
-import scala.util.{Try, Using}
+import scala.util.{Failure, Success, Try, Using}
 
 class S3FileService extends FileService {
   private val awsAccessKey = System.getenv("S3_ACCESS_KEY")
@@ -40,8 +40,13 @@ class S3FileService extends FileService {
     }
   }
 
-  override def download(filename: String): Try[Array[Byte]] = Try {
-    val obj = amazonS3Client.getObject(bucketName, filename)
-    IOUtils.toByteArray(obj.getObjectContent)
-  }
+  override def download(filename: String): Try[Array[Byte]] =
+    amazonS3Client.doesObjectExist(bucketName, filename) match {
+      case true => {
+        val obj = amazonS3Client.getObject(bucketName, filename)
+        Success(IOUtils.toByteArray(obj.getObjectContent))
+      }
+      case false => Failure(new Exception("File not found"))
+    }
+
 }
