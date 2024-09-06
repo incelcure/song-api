@@ -31,7 +31,7 @@ case class MultipartFileWithMeta(meta: Json, file: Array[Byte])
 
 case class AuthError(message: String)
 
-class ServerConfiguration extends AuthCheck{
+class ServerConfiguration extends AuthCheck {
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(actorSystem)
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
@@ -51,10 +51,10 @@ class ServerConfiguration extends AuthCheck{
     .serverLogic[Future] { request_data =>
       val (fileData, authBase) = request_data
       Future {
-        if(!checkCreds(authBase)){
+        if (!checkCreds(authBase)) {
           Left(StatusCode.Unauthorized)
         }
-        else{
+        else {
           val file = Files.readAllBytes(fileData.file.body.toPath)
           s3Client.upload(file, fileData.filename) match {
             case Success(filename) => Right(StatusCode.Created)
@@ -78,11 +78,10 @@ class ServerConfiguration extends AuthCheck{
       request_data =>
         val (filename, authBase) = request_data
         Future {
-          if(!checkCreds(authBase)){
+          if (!checkCreds(authBase)) {
             Left(StatusCode.Unauthorized)
           }
           else {
-            println(checkCreds(authBase)) // возвращает true если креды подходят, false иначе
             s3Client.download(filename) match {
               case Success(filedata) => Right(filedata)
               case Failure(_) => Left(StatusCode.NotFound)
@@ -98,15 +97,31 @@ class ServerConfiguration extends AuthCheck{
   val downloadWithMetaEndpoint = endpoint
     .summary("download file from s3 with meta info")
     .in("download-with-meta" / query[String]("file-id"))
+    .in(header[String]("Authorization"))
     .get
     .out(multipartBody[MultipartFileWithMeta])
+    .errorOut(statusCode)
+    .serverLogic[Future] {
+      request_data =>
+        Future {
+          val (fileId, authBase) = request_data
+          if (!checkCreds(authBase)) {
+            Left(StatusCode.Unauthorized)
+          }
+          else {
+            val file = s3Client.download(fileId)
+            val meta = enricher.getMeta(fileId)
+            (file, meta) match {
+              case (Success(filedata), Success(metainfo)) => Right(MultipartFileWithMeta(metainfo, filedata))
+              case (Success(_), Failure(_)) => Left(StatusCode.NotFound)
+              case (Failure(_), Success(_)) => Left(StatusCode.NotFound)
+              case (Failure(_), Failure(_)) => Left(StatusCode.NotFound)
+            }
+          }
+        }
+    }
 
-  val downloadWithMetaRoute = AkkaHttpServerInterpreter()
-    .toRoute(downloadWithMetaEndpoint.serverLogicPure[Future] { fileId =>
-      val file = s3Client.download(fileId)
-      val meta = enricher.getMeta(fileId)
-      Right(MultipartFileWithMeta(meta, file.get))
-    })
+  val downloadWithMetaRoute = AkkaHttpServerInterpreter().toRoute(downloadWithMetaEndpoint)
 
   val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
   //  val routes = uploadRoute ~ downloadRoute

@@ -4,7 +4,7 @@ import io.circe.parser._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.deriveDecoder
 
-import scala.util.Try
+import scala.util.{Success, Try}
 import scala.Predef
 import sttp.client4.httpclient.HttpClientSyncBackend
 import sttp.client4._
@@ -26,7 +26,7 @@ class EnricherService {
     .getOrElse(throw new RuntimeException("Cant parse creds skibidi"))
 
 
-  def getMeta(songId: String): Json = {
+  def getMeta(songId: String): Try[Json] = {
     val metaSongRequest = basicRequest
       .get(uri"https://api.spotify.com/v1/tracks/$songId")
       .auth
@@ -35,7 +35,7 @@ class EnricherService {
       .send(back)
       .body
 
-    parse(metaSongRequest).getOrElse(Json.Null)
+    Success(parse(metaSongRequest).getOrElse(Json.Null))
   }
 }
 
