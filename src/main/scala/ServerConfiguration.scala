@@ -44,13 +44,23 @@ class ServerConfiguration extends AuthCheck{
     .summary("upload file to S3")
     .in("upload")
     .in(multipartBody[MultipartFileData])
+    .in(header[String]("Authorization"))
     .post
-    .out(jsonBody[String])
-    .serverLogicSuccess { r =>
-      Future.fromTry {
-        println(r)
-        val f = Files.readAllBytes(r.file.body.toPath)
-        s3Client.upload(f, r.filename)
+    .errorOut(statusCode)
+    .out(statusCode)
+    .serverLogic[Future] { request_data =>
+      val (fileData, authBase) = request_data
+      Future {
+        if(!checkCreds(authBase)){
+          Left(StatusCode.Unauthorized)
+        }
+        else{
+          val file = Files.readAllBytes(fileData.file.body.toPath)
+          s3Client.upload(file, fileData.filename) match {
+            case Success(filename) => Right(StatusCode.Created)
+            case Failure(_) => Left(StatusCode.BadRequest)
+          }
+        }
       }
     }
 
