@@ -8,6 +8,9 @@ import io.circe.parser._
 
 import scala.util.Try
 
+
+// service need to call repository
+// only repository calls db
 class SongDBService {
   private val pgUrl = System.getenv("POSTGRES_DB_URL")
   private val pgUser = System.getenv("POSTGRES_USER")

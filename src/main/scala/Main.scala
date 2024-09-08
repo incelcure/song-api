@@ -1,6 +1,14 @@
+import scala.sys.ShutdownHookThread
+
 object Main {
   def main(args: Array[String]): Unit = {
-    val serverConfiguration = new ServerConfiguration
-    serverConfiguration.start()
+    // 1. создаешь клиента
+    // 2. создаешь амазон
+    // 3. создаешь бд
+    // 4. создаешь сервис модуль
+    // 5. создаешь контроллер модуль
+    // 6. создаешь сервер в который передаешь эндпоинты контроллеров из контроллер модуля
+
+
   }
 }

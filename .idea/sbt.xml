@@ -3,7 +3,19 @@
   <component name="ScalaSbtSettings">
     <option name="linkedExternalProjectsSettings">
       <SbtProjectSettings>
+        <option name="converterVersion" value="1" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/auth" />
+            <option value="$PROJECT_DIR$/enricher-api" />
+            <option value="$PROJECT_DIR$/file-api" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/song-api" />
+          </set>
+        </option>
+        <option name="sbtVersion" value="1.10.1" />
       </SbtProjectSettings>
     </option>
   </component>
