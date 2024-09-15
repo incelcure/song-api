@@ -118,9 +118,7 @@ class Server extends AuthCheck {
   val downloadWithMetaRoute = AkkaHttpServerInterpreter().toRoute(downloadWithMetaEndpoint)
 
   val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
-  //  val routes = uploadRoute ~ downloadRoute
 
-  //    val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(routes, "localhost", 8080)
   val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
 
   def start(): Unit = {
