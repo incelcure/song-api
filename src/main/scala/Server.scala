@@ -22,16 +22,11 @@ import java.util.Base64
 import scala.io.StdIn
 import sttp.tapir.json.circe._
 import sttp.tapir.server.ServerEndpoint
+import data._
 
 import scala.util.{Failure, Success} //implicits for decode json
 
-case class MultipartFileData(filename: String, file: Part[File])
-
-case class MultipartFileWithMeta(meta: Json, file: Array[Byte])
-
-case class AuthError(message: String)
-
-class ServerConfiguration extends AuthCheck {
+class Server extends AuthCheck {
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(actorSystem)
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
@@ -55,9 +50,8 @@ class ServerConfiguration extends AuthCheck {
           Left(StatusCode.Unauthorized)
         }
         else {
-          val file = Files.readAllBytes(fileData.file.body.toPath)
-          s3Client.upload(file, fileData.filename) match {
-            case Success(filename) => Right(StatusCode.Created)
+          s3Client.upload(fileData.file, fileData.filename) match {
+            case Success(_) => Right(StatusCode.Created)
             case Failure(_) => Left(StatusCode.BadRequest)
           }
         }

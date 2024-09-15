@@ -1,6 +1,6 @@
 object Main {
   def main(args: Array[String]): Unit = {
-    val serverConfiguration = new ServerConfiguration
+    val serverConfiguration = new Server
     serverConfiguration.start()
   }
 }
