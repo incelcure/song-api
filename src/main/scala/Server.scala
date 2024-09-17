@@ -1,3 +1,4 @@
+import Server.AkkaEndpoint
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -24,24 +25,21 @@ import sttp.tapir.json.circe._
 import sttp.tapir.server.ServerEndpoint
 import data._
 
-import scala.util.{Failure, Success} //implicits for decode json
+import scala.util.{Failure, Success}
+import controllers._
 
-class Server {
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val materializer: Materializer = Materializer(actorSystem)
-  implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+class Server(endpoints: List[AkkaEndpoint])(implicit actorSystem: ActorSystem) {
+
+  import actorSystem._
   
+  private val routes = AkkaHttpServerInterpreter().toRoute(endpoints)
 
+  def start(): Future[Unit] = Http()
+    .newServerAt("localhost", 8080)
+    .bind(routes)
+    .flatMap(_ => Future.never)
+}
 
-  //
-  //  val routes = uploadRoute ~ downloadRoute ~ downloadWithMetaRoute
-  //
-  //  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(routes)
-  //
-  //  def start(): Unit = {
-  //    StdIn.readLine()
-  //    bindFuture
-  //      .flatMap(_.unbind)
-  //      .onComplete(_ => actorSystem.terminate())
-  //  }
+object Server {
+  type AkkaEndpoint = ServerEndpoint[WebSockets with AkkaStreams, Future]
 }
