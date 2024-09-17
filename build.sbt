@@ -26,7 +26,7 @@ lazy val `auth` = (project in file("auth"))
 
 
 lazy val root = (project in file("."))
-  .settings(name := "songTest2")
+  .settings(name := "songApi")
   .aggregate(`song-api`, `file-api`, `enricher-api`)
   .dependsOn(`song-api`, `file-api`, `enricher-api`)
 
