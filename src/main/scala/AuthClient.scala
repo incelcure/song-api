@@ -8,30 +8,18 @@ import io.circe.parser._
 import io.circe.syntax.EncoderOps
 
 import java.util.Base64
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
-// signature should look like this
 trait AuthClient {
   def authenticate(credentials : Credentials) : Future[Boolean]
 }
 
-
-class AuthClientImpl(httpClient: WebSocketSyncBackend) /** extends AuthClient **/{
-  def authenticate(rawCreds: String): Boolean = {
-    // todo: maybe check for valid creds?
-
-    val encodedCredentials = Base64.getDecoder
-      .decode(rawCreds.split(" ").last)
-      .map(_.toChar).mkString
-
-    val Array(login, password) = encodedCredentials.split(":")
-
-
-    // todo: rewrite this... send json
+class AuthClientImpl(httpClient: WebSocketSyncBackend)(implicit ex : ExecutionContext) extends AuthClient{
+  override def authenticate(credentials: Credentials): Future[Boolean] = Future {
     val tokenRequest: Request[Either[String, String]] = basicRequest
       .get(uri"http://127.0.0.1:8081/login")
-      .multipartBody(multipart("name", login), multipart("password", password))
+      .body(Map("name"->credentials.name, "password" -> credentials.password))
 
     tokenRequest.response(asStringAlways)
       .send(httpClient)

@@ -6,7 +6,7 @@ import io.circe.syntax.EncoderOps
 import io.circe.{Decoder, Encoder}
 import sttp.tapir.{Codec, CodecFormat, DecodeResult, Schema}
 
-case class Credentials(login: String, password: String)
+case class Credentials(name: String, password: String)
 
 object Credentials {
   implicit val credentialsDecoder: Decoder[Credentials] = deriveDecoder

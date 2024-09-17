@@ -1,4 +1,4 @@
-import AuthController.User
+import AuthController.Credentials
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives.post
@@ -30,12 +30,12 @@ class AuthController {
   val registerEndoint = endpoint
     .summary("register user")
     .in("register")
-    .in(multipartBody[User])
+    .in(jsonBody[Credentials])
     .post
     .out(jsonBody[String])
-    .serverLogicSuccess { user =>
+    .serverLogicSuccess { creds =>
       Future.fromTry {
-        authService.register(user.name, user.password)
+        authService.register(creds.name, creds.password)
       }
     }
 
@@ -44,12 +44,12 @@ class AuthController {
   val loginEndpoint = endpoint
     .summary("login user")
     .in("login")
-    .in(multipartBody[User])
+    .in(jsonBody[Credentials])
     .get
     .out(jsonBody[Boolean])
-    .serverLogicSuccess{ user =>
+    .serverLogic{ creds =>
       Future.fromTry{
-        authService.login(user.name, user.password)
+        authService.login(creds.name, creds.password)
       }
     }
   val logRoute = AkkaHttpServerInterpreter().toRoute(loginEndpoint)
@@ -65,7 +65,7 @@ class AuthController {
 }
 
 object AuthController{
-  case class User(name: String, password: String)
+  case class Credentials(name: String, password: String)
 
-  implicit val userDecoder: Decoder[User] = deriveDecoder
+  implicit val credentialsDecoder: Decoder[Credentials] = deriveDecoder
 }
