@@ -47,7 +47,7 @@ class AuthController {
     .in(jsonBody[Credentials])
     .get
     .out(jsonBody[Boolean])
-    .serverLogic{ creds =>
+    .serverLogicSuccess { creds =>
       Future.fromTry{
         authService.login(creds.name, creds.password)
       }

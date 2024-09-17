@@ -1,6 +1,7 @@
 package controllers
 
 import auth.AuthEndpointBuilder
+import com.amazonaws.services.connectcases.model.FileContent
 import services.ServiceModule
 
 import scala.concurrent.ExecutionContext
@@ -11,4 +12,5 @@ class ControllerModule(serviceModule: ServiceModule)(implicit ex: ExecutionConte
   val fileController =
     new FileController(serviceModule.s3FileService, authEndpointBuilder)(serviceModule.enricherService)
 
+  val endpoints = fileController.endpoints
 }
