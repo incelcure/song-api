@@ -22,6 +22,6 @@ class AuthEndpointBuilder(authClient: AuthClient)(implicit ex : ExecutionContext
       val creds : Credentials = new Credentials(login, password)
 
       authClient.authenticate(creds)
-        .map(isAuthenticated => Either.cond(isAuthenticated, StatusCode.Unauthorized, creds))
+        .map(isAuthenticated => Either.cond(isAuthenticated, creds, StatusCode.Unauthorized))
     }
 }
