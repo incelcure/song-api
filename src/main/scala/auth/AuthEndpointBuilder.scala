@@ -1,3 +1,5 @@
+package auth
+
 import data.Credentials
 import sttp.model.{HeaderNames, StatusCode}
 import sttp.tapir.server.PartialServerEndpoint

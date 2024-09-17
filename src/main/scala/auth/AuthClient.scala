@@ -1,13 +1,8 @@
-import data.Credentials
-import sttp.client4.{Request, UriContext, WebSocketSyncBackend, asStringAlways, basicRequest, multipart}
-import sttp.client4.httpclient.HttpClientSyncBackend
-import sttp.tapir.{Codec, CodecFormat, DecodeResult, Schema}
-import io.circe._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.parser._
-import io.circe.syntax.EncoderOps
+package auth
 
-import java.util.Base64
+import data.Credentials
+import sttp.client4.{Request, UriContext, WebSocketSyncBackend, asStringAlways, basicRequest}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 
