@@ -1,3 +1,5 @@
+package file.services
+
 import java.io.{File, FileInputStream, FileOutputStream}
 import scala.util
 import scala.util.{Try, Using}

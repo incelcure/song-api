@@ -1,3 +1,4 @@
+package file.services
 import com.amazonaws.{ClientConfiguration, Protocol}
 import com.amazonaws.auth.{AWSCredentialsProvider, AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration

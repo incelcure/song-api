@@ -1,7 +1,7 @@
 package services
 
 import com.amazonaws.services.s3.AmazonS3
-import _root_.{EnricherService, S3FileService, SongDBService}
+import file._
 import auth.{AuthClient, AuthClientImpl}
 import sttp.client4.WebSocketSyncBackend
 

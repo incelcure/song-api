@@ -13,7 +13,7 @@ import sttp.tapir.generic.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import _root_.{EnricherService, S3FileService}
+
 import sttp.tapir.json.circe.jsonBody
 
 class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointBuilder)(enricherClient: EnricherService)(implicit ex: ExecutionContext) extends TapirController[Future] {
