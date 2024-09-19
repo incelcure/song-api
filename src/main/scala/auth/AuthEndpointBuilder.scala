@@ -9,8 +9,8 @@ import java.util.Base64
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class AuthEndpointBuilder(authClient: AuthClient)(implicit ex : ExecutionContext) {
-  val authEndpoint: PartialServerEndpoint[String, Nothing, Unit, StatusCode, Unit, Any, Future] = endpoint
+class AuthEndpointBuilder(authClient: AuthClient)(implicit ex: ExecutionContext) {
+  val authEndpoint: PartialServerEndpoint[String, Credentials, Unit, StatusCode, Unit, Any, Future] = endpoint
     .securityIn(header[String](HeaderNames.Authorization))
     .errorOut(statusCode)
     .serverSecurityLogic { basic =>
@@ -19,9 +19,9 @@ class AuthEndpointBuilder(authClient: AuthClient)(implicit ex : ExecutionContext
         .map(_.toChar).mkString
 
       val Array(login, password) = encodedCredentials.split(":")
-      val creds : Credentials = new Credentials(login, password)
+      val creds: Credentials = new Credentials(login, password)
 
-      authClient.authenticate(creds)
-        .map(isAuthenticated => Either.cond(isAuthenticated, creds, StatusCode.Unauthorized))
+        authClient.authenticate(creds)
+          .map(isAuthenticated => Either.cond(isAuthenticated, creds, StatusCode.Unauthorized))
     }
 }
