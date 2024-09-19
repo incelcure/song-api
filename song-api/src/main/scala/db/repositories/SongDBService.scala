@@ -1,8 +1,9 @@
-import doobie._
-import doobie.implicits._
+package db.repositories
+
 import cats.effect._
 import cats.effect.unsafe.implicits.global
-import doobie.postgres.circe.jsonb.implicits._
+import doobie._
+import doobie.implicits._
 import io.circe.Json
 import io.circe.parser._
 

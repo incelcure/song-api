@@ -1,7 +1,7 @@
+package db.repositories
+
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-
-import scala.util.{Success, Try}
 
 class SongDBServiceSpec extends AnyFunSuite with Matchers {
   test("selected song meta should be {\"album\":\"scalaTest1\"}"){

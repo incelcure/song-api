@@ -1,9 +1,12 @@
 package services
 
 import com.amazonaws.services.s3.AmazonS3
-import file._
 import auth.{AuthClient, AuthClientImpl}
 import sttp.client4.WebSocketSyncBackend
+
+import file.services.S3FileService
+import enricher.services.EnricherService
+import db.repositories.SongDBService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

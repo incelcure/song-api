@@ -1,3 +1,5 @@
+package enricher.services
+
 import EnricherService.ClientCredentials
 import io.circe._
 import io.circe.parser._
