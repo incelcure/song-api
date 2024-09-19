@@ -17,6 +17,9 @@ import file.services.S3FileService
 import enricher.services.EnricherService
 import sttp.tapir.json.circe.jsonBody
 
+import sttp.tapir.json.circe._ // implicit codec for multipart
+
+
 class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointBuilder)(enricherClient: EnricherService)(implicit ex: ExecutionContext) extends TapirController[Future] {
   val baseEndpoint = authEndpointBuilder.authEndpoint
 
