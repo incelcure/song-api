@@ -1,3 +1,4 @@
+import enricher.services.EnricherService
 import sttp.client4.basicRequest
 import sttp.client4.httpclient.HttpClientSyncBackend
 import sttp.client4._
@@ -9,8 +10,8 @@ object Main {
   def main(args: Array[String]): Unit = {
     println("Hey, enricher API")
 
-    val enricher = new EnricherService
-    println(enricher.getMeta("64xpre2xJX11xbKq4wWdNH")) // Avenade - Just smile and wave boys
+//    val enricher = new EnricherService
+//    println(enricher.getMeta("64xpre2xJX11xbKq4wWdNH")) // Avenade - Just smile and wave boys
 
 
   }

@@ -6,6 +6,7 @@ import doobie._
 import doobie.implicits._
 import io.circe.Json
 import io.circe.parser._
+import org.postgresql.util.PGobject
 
 import scala.util.Try
 
@@ -31,14 +32,24 @@ class SongDBService {
   }
 
   def insertSongMeta(songId: String, songMeta: String): Try[Unit] = Try {
-      val json_meta = parse(songMeta).getOrElse(Json.Null)
+      val pgObj =  new PGobject()
+      pgObj.setType("json")
+      pgObj.setValue(parse(songMeta).getOrElse(Json.Null).noSpaces)
+//      val json_meta = convertToJson()
       sql"""INSERT INTO song_meta(song_id, meta_data)
-            VALUES($songId, $json_meta)
+            VALUES($songId, $pgObj)
          """
         .update
         .run
         .transact(pgConfig)
         .unsafeRunSync()
+  }
+
+  def convertToJson(json: Json): PGobject = {
+    val pgObject = new PGobject()
+    pgObject.setType("json")
+    pgObject.setValue(json.noSpaces)
+    pgObject
   }
 
 
