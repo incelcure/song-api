@@ -30,7 +30,7 @@ class AuthController {
   val registerEndoint = endpoint
     .summary("register user")
     .in("register")
-    .in(jsonBody[Credentials])
+    .in(multipartBody[Credentials])
     .post
     .out(jsonBody[String])
     .serverLogicSuccess { creds =>
@@ -44,7 +44,7 @@ class AuthController {
   val loginEndpoint = endpoint
     .summary("login user")
     .in("login")
-    .in(jsonBody[Credentials])
+    .in(multipartBody[Credentials])
     .get
     .out(jsonBody[Boolean])
     .serverLogicSuccess { creds =>
