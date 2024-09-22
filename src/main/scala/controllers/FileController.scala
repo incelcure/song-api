@@ -1,5 +1,7 @@
 package controllers
 
+import sttp.tapir.json.circe._ // implicit codec for multipart
+
 import data.{MultipartFileData, MultipartFileWithMeta}
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
@@ -12,13 +14,13 @@ import java.nio.file.Files
 import sttp.tapir.generic.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Using}
 import file.services.S3FileService
 import enricher.services.EnricherService
 import sttp.tapir.json.circe.jsonBody
 
-import sttp.tapir.json.circe._ // implicit codec for multipart
-
+import java.io.FileInputStream
+import java.io._
 
 class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointBuilder)(enricherClient: EnricherService)(implicit ex: ExecutionContext) extends TapirController[Future] {
   val baseEndpoint = authEndpointBuilder.authEndpoint
@@ -32,12 +34,18 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
       .serverLogic { _ =>
         multipartFileData =>
           Future {
-            s3Client.upload(multipartFileData.file, multipartFileData.filename) match {
+            s3Client.upload(tapirToByte(multipartFileData.file), multipartFileData.filename) match {
               case Success(_) => Right(StatusCode.Created)
               case Failure(_) => Left(StatusCode.BadRequest)
             }
           }
       }
+
+  private def tapirToByte(file: TapirFile): Array[Byte] = {
+    Using.resource(new FileInputStream(file)) { stream =>
+        stream.readAllBytes()
+    }
+  }
 
   private val downloadEndpoint: ServerEndpoint[WebSockets with AkkaStreams, Future] = baseEndpoint
     .summary("download file from s3")
