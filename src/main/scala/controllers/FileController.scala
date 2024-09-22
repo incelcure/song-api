@@ -34,17 +34,25 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
       .serverLogic { _ =>
         multipartFileData =>
           Future {
-            s3Client.upload(tapirToByte(multipartFileData.file), multipartFileData.filename) match {
+            s3Client.upload(fileToBytes(multipartFileData.file), multipartFileData.filename) match {
               case Success(_) => Right(StatusCode.Created)
               case Failure(_) => Left(StatusCode.BadRequest)
             }
           }
       }
 
-  private def tapirToByte(file: TapirFile): Array[Byte] = {
+  private def fileToBytes(file: TapirFile): Array[Byte] = {
     Using.resource(new FileInputStream(file)) { stream =>
       stream.readAllBytes()
     }
+  }
+
+  private def bytesToFile(bytes: Array[Byte], filename: String): TapirFile = {
+    val file = new File(s"$DOWNLOAD_PATH/$filename")
+    Using.resource(new FileOutputStream(file)) { stream =>
+      stream.write(bytes)
+    }
+    file
   }
 
   private val downloadEndpoint: ServerEndpoint[WebSockets with AkkaStreams, Future] = baseEndpoint
@@ -57,13 +65,7 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
         filename =>
           Future {
             s3Client.download(filename) match {
-              case Success(filedata) => Right {
-                val file = new File(s"$DOWNLOAD_PATH/$filename")
-                Using.resource(new FileOutputStream(file)) { stream =>
-                  stream.write(filedata)
-                }
-                file
-              }
+              case Success(filedata) => Right(bytesToFile(filedata, filename))
               case Failure(_) => Left(StatusCode.NotFound)
             }
           }
@@ -80,7 +82,8 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
           val file = s3Client.download(fileId)
           val meta = enricherClient.getMeta(fileId)
           (file, meta) match {
-            case (Success(filedata), Success(metainfo)) => Right(MultipartFileWithMeta(metainfo, filedata))
+            case (Success(filedata), Success(metainfo)) =>
+              Right(MultipartFileWithMeta(metainfo, bytesToFile(filedata, fileId)))
             case (Success(_), Failure(_)) => Left(StatusCode.NotFound)
             case (Failure(_), Success(_)) => Left(StatusCode.NotFound)
             case (Failure(_), Failure(_)) => Left(StatusCode.NotFound)
