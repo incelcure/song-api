@@ -4,25 +4,14 @@ import cats.effect._
 import cats.effect.unsafe.implicits.global
 import doobie._
 import doobie.implicits._
+import doobie.util.transactor.Transactor.Aux
 import io.circe.Json
 import io.circe.parser._
 import org.postgresql.util.PGobject
 
 import scala.util.Try
 
-class SongDBService {
-  private val pgUrl = System.getenv("POSTGRES_DB_URL")
-  private val pgUser = System.getenv("POSTGRES_USER")
-  private val pgPassword = System.getenv("POSTGRES_PASSWORD")
-
-  private val pgConfig = Transactor.fromDriverManager[IO](
-    driver = "org.postgresql.Driver",
-    url = s"jdbc:postgresql://$pgUrl",
-    user = pgUser,
-    password = pgPassword,
-    logHandler = None
-  )
-
+class SongDBRepository(pgConfig: Aux[IO, Unit]) {
   def getSongMetaById(songId: String): Try[String] = Try {
     sql"SELECT meta_data FROM song_meta WHERE song_id=$songId"
       .query[String]

@@ -1,9 +1,12 @@
 import akka.actor.ActorSystem
+import cats.effect.IO
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.{ClientConfiguration, Protocol}
 import controllers.ControllerModule
+import doobie.Transactor
+import doobie.util.transactor.Transactor.Aux
 import services.ServiceModule
 import sttp.client4.WebSocketSyncBackend
 import sttp.client4.httpclient.HttpClientSyncBackend
@@ -38,9 +41,19 @@ object Main {
     // SHIR FOR ENRICHER
     // todo: let enricher take arguments
     // SHIT FOR DB
-    // todo: let db take arguments
+    val pgUrl = System.getenv("POSTGRES_DB_URL")
+    val pgUser = System.getenv("POSTGRES_USER")
+    val pgPassword = System.getenv("POSTGRES_PASSWORD")
+
+    val pgConfig: Aux[IO, Unit] = Transactor.fromDriverManager[IO](
+      driver = "org.postgresql.Driver",
+      url = s"jdbc:postgresql://$pgUrl",
+      user = pgUser,
+      password = pgPassword,
+      logHandler = None
+    )
     // SERVICE MODULES
-    val serviceModule = new ServiceModule(amazonS3Client, bucketName, back)
+    val serviceModule = new ServiceModule(amazonS3Client, bucketName, back, pgConfig)
     // CONTROLLER MODULE
     val controllerModule = new ControllerModule(serviceModule)
     // SERVER
