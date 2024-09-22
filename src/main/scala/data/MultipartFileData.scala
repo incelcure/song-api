@@ -1,4 +1,6 @@
 package data
 
-case class MultipartFileData(filename: String, file: Array[Byte])
+import sttp.tapir.TapirFile
+
+case class MultipartFileData(filename: String, file: TapirFile)
 

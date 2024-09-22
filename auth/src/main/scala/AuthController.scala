@@ -18,19 +18,19 @@ import io.circe._
 import io.circe.parser._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.deriveDecoder
+import sttp.capabilities.WebSockets
+import sttp.capabilities.akka.AkkaStreams
 
 
-class AuthController {
+class AuthController(authService: AuthService) {
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(actorSystem)
   implicit val executionContext: ExecutionContextExecutor = actorSystem.dispatcher
-  private val authService = new AuthService
-
 
   val registerEndoint = endpoint
     .summary("register user")
     .in("register")
-    .in(jsonBody[Credentials])
+    .in(multipartBody[Credentials])
     .post
     .out(jsonBody[String])
     .serverLogicSuccess { creds =>
@@ -39,29 +39,21 @@ class AuthController {
       }
     }
 
-  val regRoute = AkkaHttpServerInterpreter().toRoute(registerEndoint)
 
   val loginEndpoint = endpoint
     .summary("login user")
     .in("login")
-    .in(jsonBody[Credentials])
+    .in(multipartBody[Credentials])
     .get
     .out(jsonBody[Boolean])
-    .serverLogic{ creds =>
+    .serverLogicSuccess { creds =>
       Future.fromTry{
         authService.login(creds.name, creds.password)
       }
     }
-  val logRoute = AkkaHttpServerInterpreter().toRoute(loginEndpoint)
 
-  val routes = regRoute ~ logRoute
-  val bindFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8081).bind(routes)
-  def run(): Unit = {
-    StdIn.readLine()
-    bindFuture
-      .flatMap(_.unbind)
-      .onComplete(_ => actorSystem.terminate())
-  }
+  def endpoints: List[ServerEndpoint[WebSockets with AkkaStreams, Future]] =
+    List(registerEndoint, loginEndpoint)
 }
 
 object AuthController{

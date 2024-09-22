@@ -3,23 +3,13 @@ import doobie._
 import doobie.implicits._
 import cats.effect._
 import cats.effect.unsafe.implicits.global
+import doobie.util.transactor.Transactor.Aux
 import io.circe.Json
 import io.circe.parser._
+
 import scala.util.Try
 
-class AuthService {
-  private val pgUrl = System.getenv("POSTGRES_DB_URL")
-  private val pgUser = System.getenv("POSTGRES_USER")
-  private val pgPassword = System.getenv("POSTGRES_PASSWORD")
-
-  private val pgConfig = Transactor.fromDriverManager[IO](
-    driver = "org.postgresql.Driver",
-    url = s"jdbc:postgresql://$pgUrl",
-    user = pgUser,
-    password = pgPassword,
-    logHandler = None
-  )
-
+class AuthService(pgConfig: Aux[IO, Unit]) {
   def register(name: String, password: String): Try[String] = Try {
     sql"""INSERT INTO user_table (name, password)
          VALUES ($name, $password)

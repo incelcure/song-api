@@ -1,3 +1,4 @@
+package file.services
 import java.io.File
 import scala.util.Try
 
