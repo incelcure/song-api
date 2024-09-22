@@ -29,7 +29,6 @@ import scala.util.{Failure, Success}
 import controllers._
 
 class Server(endpoints: List[AkkaEndpoint])(implicit actorSystem: ActorSystem) {
-
   import actorSystem._
 
   private val routes = AkkaHttpServerInterpreter().toRoute(endpoints)
