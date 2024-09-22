@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main {
   def main(args: Array[String]): Unit = {
-    // Client
+    // Client for Auth and Enricher
     val back: WebSocketSyncBackend = HttpClientSyncBackend()
     // S3
     val awsAccessKey = System.getenv("S3_ACCESS_KEY")
@@ -38,13 +38,10 @@ object Main {
       .build()
     // ACTOR SYSTEM
     implicit val actorSystem: ActorSystem = ActorSystem()
-    // SHIR FOR ENRICHER
-    // todo: let enricher take arguments
-    // SHIT FOR DB
+    // CONFIG FOR DB
     val pgUrl = System.getenv("POSTGRES_DB_URL")
     val pgUser = System.getenv("POSTGRES_USER")
     val pgPassword = System.getenv("POSTGRES_PASSWORD")
-
     val pgConfig: Aux[IO, Unit] = Transactor.fromDriverManager[IO](
       driver = "org.postgresql.Driver",
       url = s"jdbc:postgresql://$pgUrl",
