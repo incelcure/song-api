@@ -1,14 +1,13 @@
 package controllers
 
-import sttp.tapir.json.circe._ // implicit codec for multipart
-
-import data.{MultipartFileData, MultipartFileWithMeta}
+import sttp.tapir.json.circe._
+import data.{Credentials, MultipartFileData, MultipartFileWithMeta}
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir._
 import _root_.auth.AuthEndpointBuilder
-import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.{PartialServerEndpoint, ServerEndpoint}
 
 import java.nio.file.Files
 import sttp.tapir.generic.auto._
@@ -23,7 +22,8 @@ import java.io.FileInputStream
 import java.io._
 
 class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointBuilder)(enricherClient: EnricherService)(implicit ex: ExecutionContext) extends TapirController[Future] {
-  val baseEndpoint = authEndpointBuilder.authEndpoint
+  private val baseEndpoint: PartialServerEndpoint[String, Credentials, Unit, StatusCode, Unit, Any, Future] = authEndpointBuilder.authEndpoint
+  private val DOWNLOAD_PATH: String = System.getenv("DOWNLOAD_PATH")
 
   private val uploadEndpoint: ServerEndpoint[WebSockets with AkkaStreams, Future] =
     baseEndpoint
@@ -43,7 +43,7 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
 
   private def tapirToByte(file: TapirFile): Array[Byte] = {
     Using.resource(new FileInputStream(file)) { stream =>
-        stream.readAllBytes()
+      stream.readAllBytes()
     }
   }
 
@@ -51,16 +51,21 @@ class FileController(s3Client: S3FileService, authEndpointBuilder: AuthEndpointB
     .summary("download file from s3")
     .in("download" / query[String]("filename"))
     .get
-    .out(jsonBody[Array[Byte]])
+    .out(fileBody) // todo: change to streams
     .serverLogic {
       _ =>
         filename =>
           Future {
             s3Client.download(filename) match {
-              case Success(filedata) => Right(filedata)
+              case Success(filedata) => Right {
+                val file = new File(s"$DOWNLOAD_PATH/$filename")
+                Using.resource(new FileOutputStream(file)) { stream =>
+                  stream.write(filedata)
+                }
+                file
+              }
               case Failure(_) => Left(StatusCode.NotFound)
             }
-
           }
     }
 
