@@ -29,15 +29,10 @@ class S3FileServiceSpec extends AnyFunSuite with Matchers {
     .withEndpointConfiguration(awsEndpoint)
     .build()
 
-  test("Upload filename should be s3FileTest1") {
-
+  test("Donwload file should be like in ") {
     val s3FileService = new S3FileService(amazonS3Client, bucketName)
     val file = "Hello world!"
-    s3FileService.upload(file.getBytes(), "bruh322.txt") shouldBe Success("bruh322.txt")
-  }
-
-  test("Donwload file should be like in s3FileTest1") {
-    val s3FileService = new S3FileService(amazonS3Client, bucketName)
-    s3FileService.download("bruh322.txt").get shouldBe "Hello world!".getBytes()
+    s3FileService.upload(file.getBytes(), "bruh322.txt")
+    s3FileService.download("bruh322.txt").get shouldBe file.getBytes()
   }
 }
