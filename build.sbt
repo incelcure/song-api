@@ -33,3 +33,5 @@ lazy val root = (project in file("."))
 libraryDependencies += "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % "1.11.1"
 libraryDependencies += "com.softwaremill.sttp.tapir" %% "tapir-json-circe"        % "1.10.15"
 libraryDependencies += "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % "1.10.15"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+
